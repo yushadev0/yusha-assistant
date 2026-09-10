@@ -1,0 +1,23 @@
+# sırlar / yerel yapılandırma
+.env
+config.yaml
+secrets/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+
+# araç önbellekleri
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# editör / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

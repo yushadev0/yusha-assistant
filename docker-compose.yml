@@ -1,0 +1,46 @@
+name: yusha-assistant
+
+services:
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    restart: unless-stopped
+    environment:
+      # açılan endpoint'ler — geri kalan her şey varsayılan olarak kapalı (0)
+      CONTAINERS: 1
+      SERVICES: 1
+      TASKS: 1
+      IMAGES: 1
+      INFO: 1
+      POST: 1          # restart / start / stop / exec create
+      EXEC: 1          # /run  target: container:<ad>
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - yusha-internal
+
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      YUSHA_DOCKER_HOST: tcp://docker-socket-proxy:2375
+      YUSHA_CONFIG_PATH: /app/config.yaml
+      YUSHA_HOST_PROC: /host/proc
+      YUSHA_HOST_ROOT: /host/root
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./secrets:/app/secrets:ro
+      - /proc:/host/proc:ro
+      - /:/host/root:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # /run target: host için SSH hedefi
+    depends_on:
+      - docker-socket-proxy
+    networks:
+      - yusha-internal
+      - default
+
+networks:
+  yusha-internal:
+    internal: true
+  default:

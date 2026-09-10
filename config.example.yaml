@@ -1,0 +1,43 @@
+# Bot'un yönetebileceği servisler.
+#   name      -> Telegram'da kullandığın kısa ad (/logs iposi)
+#   container -> gerçek docker container adı
+#   actions   -> izin verilen aksiyonlar: logs, inspect, restart, start, stop
+services:
+  - name: telemetria
+    container: telemetria
+    actions: [logs, inspect, restart]
+
+  - name: iposi
+    container: iposi
+    actions: [logs, inspect, restart]
+
+  - name: web
+    container: website
+    actions: [logs, inspect]
+
+# /run ile çalıştırılabilen, önceden tanımlı komutlar. SERBEST SHELL YOK:
+# kullanıcı sadece komut *ismini* seçer, argv sabittir.
+#   target: "host"            -> VPS'te SSH ile (SSH yapılandırılmışsa)
+#   target: "container:<ad>"  -> ilgili container içinde docker exec
+#   confirm: true             -> çalıştırmadan önce onay ister
+commands:
+  - name: disk
+    description: "Disk kullanımı"
+    target: host
+    argv: ["df", "-h"]
+
+  - name: top
+    description: "En çok CPU kullanan süreçler"
+    target: host
+    argv: ["sh", "-c", "ps -eo pid,pcpu,pmem,comm --sort=-pcpu | head -n 16"]
+
+  - name: iposi-health
+    description: "iposi container içinden healthcheck"
+    target: "container:iposi"
+    argv: ["sh", "-c", "wget -qO- http://localhost:8080/health || echo DOWN"]
+
+  - name: docker-prune
+    description: "Kullanılmayan image/volume temizliği"
+    target: host
+    argv: ["docker", "system", "prune", "-f"]
+    confirm: true
